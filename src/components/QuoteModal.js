@@ -65,12 +65,10 @@ export default function QuoteModal({ isOpen, onClose, preselectedProduct }) {
     try {
       // Send email via EmailJS
       const templateParams = {
-        from_name: formData.name,
-        from_email: formData.email,
-        from_phone: formData.phone,
-        product: formData.product,
-        message: formData.message,
-        to_name: 'Coal City Jacuzzi Team',
+        name: formData.name,
+        email: formData.email,
+        title: `Quote Request – ${formData.product}`,
+        message: `Phone: ${formData.phone}\nProduct: ${formData.product}\n\n${formData.message}`,
       };
 
       await emailjs.send(

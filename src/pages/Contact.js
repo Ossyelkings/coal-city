@@ -26,12 +26,10 @@ export default function Contact() {
     try {
       // Send email via EmailJS
       const templateParams = {
-        from_name: formData.name,
-        from_email: formData.email,
-        from_phone: formData.phone || 'Not provided',
-        subject: formData.subject,
-        message: formData.message,
-        to_name: 'Coal City Jacuzzi Team',
+        name: formData.name,
+        email: formData.email,
+        title: formData.subject,
+        message: `Phone: ${formData.phone || 'Not provided'}\n\n${formData.message}`,
       };
 
       await emailjs.send(
