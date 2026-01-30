@@ -1,7 +1,62 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import companyService from '../services/companyService';
+import categoryService from '../services/categoryService';
+
+const fallbackProducts = ['Jacuzzis & Hot Tubs', 'Bathtubs', 'Sinks & Basins', 'Water Closets', 'Pipes & Fittings', 'Valves'];
+
+const fallbackContact = {
+  address: '123 Ogui Road, Enugu, Nigeria',
+  phone: '+234 800 COAL CITY',
+  email: 'info@coalcityplumbing.com',
+};
+
+const fallbackSocials = [
+  { platform: 'facebook', url: '#facebook' },
+  { platform: 'instagram', url: '#instagram' },
+  { platform: 'twitter', url: '#twitter' },
+];
 
 export default function Footer() {
+  const [products, setProducts] = useState(fallbackProducts);
+  const [contact, setContact] = useState(fallbackContact);
+  const [socials, setSocials] = useState(fallbackSocials);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [compRes, catRes] = await Promise.all([
+          companyService.get().catch(() => null),
+          categoryService.list().catch(() => null),
+        ]);
+
+        if (compRes?.data) {
+          const c = compRes.data;
+          setContact({
+            address: c.address || fallbackContact.address,
+            phone: c.phone || fallbackContact.phone,
+            email: c.email || fallbackContact.email,
+          });
+          if (c.socialLinks) {
+            const mapped = Object.entries(c.socialLinks)
+              .filter(([, url]) => url)
+              .map(([platform, url]) => ({ platform, url }));
+            if (mapped.length) setSocials(mapped);
+          }
+        }
+
+        if (catRes?.data?.length) {
+          setProducts(catRes.data.map((c) => c.name));
+        }
+      } catch {
+        // fallbacks already set
+      }
+    };
+    fetchData();
+  }, []);
+
+  const addressParts = contact.address.split(',').map((s) => s.trim());
+
   return (
     <footer className="relative bg-navy-950 text-white overflow-hidden">
       {/* Decorative top border */}
@@ -64,7 +119,7 @@ export default function Footer() {
               Our Products
             </h4>
             <ul className="space-y-3">
-              {['Jacuzzis & Hot Tubs', 'Bathtubs', 'Sinks & Basins', 'Water Closets', 'Pipes & Fittings', 'Valves'].map(item => (
+              {products.map(item => (
                 <li key={item}>
                   <Link
                     to="/gallery"
@@ -92,8 +147,9 @@ export default function Footer() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm text-white/70">123 Ogui Road,</p>
-                  <p className="text-sm text-white/70">Enugu, Nigeria</p>
+                  {addressParts.map((part, i) => (
+                    <p key={i} className="text-sm text-white/70">{part}{i < addressParts.length - 1 ? ',' : ''}</p>
+                  ))}
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -102,7 +158,7 @@ export default function Footer() {
                     <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
                   </svg>
                 </div>
-                <p className="text-sm text-white/70">+234 800 COAL CITY</p>
+                <p className="text-sm text-white/70">{contact.phone}</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
@@ -111,7 +167,7 @@ export default function Footer() {
                     <polyline points="22,6 12,13 2,6" />
                   </svg>
                 </div>
-                <p className="text-sm text-white/70">info@coalcityplumbing.com</p>
+                <p className="text-sm text-white/70">{contact.email}</p>
               </div>
             </div>
           </div>
@@ -123,20 +179,22 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Coal City Jacuzzi & Plumbing Supplies. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            {['facebook', 'instagram', 'twitter'].map((social) => (
+            {socials.map(({ platform, url }) => (
               <a
-                key={social}
-                href={`#${social}`}
+                key={platform}
+                href={url}
+                target={url.startsWith('http') ? '_blank' : undefined}
+                rel={url.startsWith('http') ? 'noopener noreferrer' : undefined}
                 className="w-8 h-8 rounded-full bg-white/5 hover:bg-gold-500/20 flex items-center justify-center text-white/40 hover:text-gold-400 transition-all duration-300"
-                aria-label={social}
+                aria-label={platform}
               >
-                {social === 'facebook' && (
+                {platform === 'facebook' && (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
                 )}
-                {social === 'instagram' && (
+                {platform === 'instagram' && (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5"/></svg>
                 )}
-                {social === 'twitter' && (
+                {platform === 'twitter' && (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                 )}
               </a>

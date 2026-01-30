@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import teamService from '../services/teamService';
+import companyService from '../services/companyService';
 
 const values = [
   {
@@ -13,7 +15,7 @@ const values = [
   },
   {
     title: 'Customer Commitment',
-    desc: 'Your satisfaction drives everything we do. From consultation to installation support, we\'re with you every step of the way.',
+    desc: "Your satisfaction drives everything we do. From consultation to installation support, we're with you every step of the way.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
@@ -40,7 +42,7 @@ const values = [
   },
 ];
 
-const team = [
+const fallbackTeam = [
   { name: 'Chukwuemeka Obi', role: 'Founder & CEO', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face' },
   { name: 'Adaeze Nwosu', role: 'Head of Sales', image: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=400&fit=crop&crop=face' },
   { name: 'Ifeanyi Eze', role: 'Technical Director', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face' },
@@ -48,15 +50,38 @@ const team = [
 ];
 
 export default function About() {
+  const [team, setTeam] = useState(fallbackTeam);
+  const [company, setCompany] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [teamRes, compRes] = await Promise.all([
+          teamService.list().catch(() => null),
+          companyService.get().catch(() => null),
+        ]);
+        if (teamRes?.data?.length) setTeam(teamRes.data);
+        if (compRes?.data) setCompany(compRes.data);
+      } catch {
+        // fallbacks already set
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const mission = company?.mission || 'To make premium bathroom solutions accessible to every Nigerian home and business, with uncompromising quality and personalized service.';
+  const yearsLabel = company?.stats?.years || '15+';
+
   return (
     <div className="min-h-screen">
       {/* HERO */}
       <section className="relative py-40 pb-28 bg-navy-950 overflow-hidden">
         <div
           className="absolute inset-0 opacity-25"
-          style={{
-            background: 'radial-gradient(ellipse 70% 50% at 30% 60%, #1e3a5f, transparent)',
-          }}
+          style={{ background: 'radial-gradient(ellipse 70% 50% at 30% 60%, #1e3a5f, transparent)' }}
         />
         <div className="absolute top-20 right-16 w-56 h-56 border border-gold-500/10 rounded-full" />
         <div className="absolute bottom-20 left-10 w-32 h-32 border border-gold-500/5 rounded-full" />
@@ -68,7 +93,7 @@ export default function About() {
           <h1 className="animate-fade-in-up delay-100 font-display text-5xl sm:text-6xl font-bold text-white tracking-tight leading-tight max-w-3xl">
             Crafting Bathroom
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-500"> Excellence </span>
-            Since 2009
+            Since {company?.foundedYear || 2009}
           </h1>
           <p className="animate-fade-in-up delay-200 mt-6 text-lg text-white/50 leading-relaxed max-w-2xl">
             From a small plumbing supply store in Enugu to one of Nigeria's most trusted names in luxury bathroom fixtures — this is our journey.
@@ -80,7 +105,6 @@ export default function About() {
       <section className="relative py-24 bg-cream-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Showroom image */}
             <div className="relative">
               <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
                 <img
@@ -89,33 +113,22 @@ export default function About() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              {/* Floating accent */}
               <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 shadow-xl flex items-center justify-center">
                 <div className="text-center">
-                  <div className="font-display text-navy-950 font-bold text-2xl">15+</div>
+                  <div className="font-display text-navy-950 font-bold text-2xl">{yearsLabel}</div>
                   <div className="text-navy-950/60 text-[10px] uppercase tracking-wider font-semibold">Years</div>
                 </div>
               </div>
             </div>
-
-            {/* Story text */}
             <div>
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-600">
-                Who We Are
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-600">Who We Are</span>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-navy-900 mt-3 tracking-tight">
                 More Than a Store — A Partner in Building Your Dream Space
               </h2>
               <div className="mt-6 space-y-4 text-navy-600/70 leading-relaxed">
-                <p>
-                  Coal City Jacuzzi and Plumbing Supplies was founded with a clear vision: to bring world-class bathroom fixtures and plumbing materials to Nigeria's growing market. Based in the heart of Enugu — the Coal City — we've grown from a modest storefront to a renowned destination for homeowners, contractors, and architects.
-                </p>
-                <p>
-                  Our curated collection spans from luxurious jacuzzis and freestanding bathtubs to practical, high-performance plumbing components. Every product we stock is selected for its quality, durability, and aesthetic appeal.
-                </p>
-                <p>
-                  We believe that everyone deserves a bathroom that inspires. That's why we offer competitive pricing without compromising on quality, backed by expert advice from our experienced team.
-                </p>
+                <p>{company?.description || "Coal City Jacuzzi and Plumbing Supplies was founded with a clear vision: to bring world-class bathroom fixtures and plumbing materials to Nigeria\u2019s growing market. Based in the heart of Enugu \u2014 the Coal City \u2014 we\u2019ve grown from a modest storefront to a renowned destination for homeowners, contractors, and architects."}</p>
+                <p>Our curated collection spans from luxurious jacuzzis and freestanding bathtubs to practical, high-performance plumbing components. Every product we stock is selected for its quality, durability, and aesthetic appeal.</p>
+                <p>We believe that everyone deserves a bathroom that inspires. That's why we offer competitive pricing without compromising on quality, backed by expert advice from our experienced team.</p>
               </div>
             </div>
           </div>
@@ -129,11 +142,10 @@ export default function About() {
           className="absolute inset-0 opacity-15"
           style={{ background: 'radial-gradient(ellipse 40% 60% at 90% 30%, #1e3a5f, transparent)' }}
         />
-
         <div className="relative max-w-4xl mx-auto px-6 text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-400">Our Mission</span>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-white mt-4 tracking-tight leading-snug">
-            To make premium bathroom solutions accessible to every Nigerian home and business, with uncompromising quality and personalized service.
+            {mission}
           </h2>
           <div className="mt-6 mx-auto w-16 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
         </div>
@@ -149,7 +161,7 @@ export default function About() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {values.map((val, i) => (
+            {values.map((val) => (
               <div
                 key={val.title}
                 className="group p-8 rounded-2xl bg-white shadow-sm hover:shadow-lg hover:shadow-navy-900/5 border border-cream-200/50 hover:border-gold-500/20 transition-all duration-500 hover:-translate-y-1"
@@ -174,25 +186,36 @@ export default function About() {
             <div className="mt-4 mx-auto w-16 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {team.map((member, i) => (
-              <div
-                key={member.name}
-                className="group text-center"
-              >
-                <div className="aspect-square rounded-2xl relative overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-500">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-square rounded-2xl bg-cream-200" />
+                  <div className="mt-5 space-y-2">
+                    <div className="h-5 bg-cream-200 rounded w-2/3 mx-auto" />
+                    <div className="h-4 bg-cream-100 rounded w-1/2 mx-auto" />
+                  </div>
                 </div>
-                <h3 className="font-display text-lg font-bold text-navy-900 mt-5">{member.name}</h3>
-                <p className="text-sm text-gold-600 font-medium mt-0.5">{member.role}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {team.map((member) => (
+                <div key={member.name} className="group text-center">
+                  <div className="aspect-square rounded-2xl relative overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-500">
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-navy-900 mt-5">{member.name}</h3>
+                  <p className="text-sm text-gold-600 font-medium mt-0.5">{member.role}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
