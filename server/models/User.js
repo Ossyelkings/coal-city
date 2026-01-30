@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 8 },
     role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
     refreshToken: { type: String },
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
   },
   { timestamps: true }
 );
@@ -26,6 +28,8 @@ userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
   delete obj.refreshToken;
+  delete obj.passwordResetToken;
+  delete obj.passwordResetExpires;
   return obj;
 };
 

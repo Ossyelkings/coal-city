@@ -19,6 +19,8 @@ import Team from './pages/admin/Team';
 import Settings from './pages/admin/Settings';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 
 function ScrollToTop() {
@@ -72,6 +74,8 @@ export default function App() {
         {/* Auth pages — standalone layout (no navbar/footer) */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Public routes — with navbar, footer, quote modal */}
         <Route

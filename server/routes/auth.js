@@ -10,6 +10,8 @@ const {
   refresh,
   getProfile,
   updateProfile,
+  forgotPassword,
+  resetPassword,
 } = require('../controllers/authController');
 
 // POST /api/auth/register
@@ -69,6 +71,28 @@ router.put(
   ],
   validate,
   updateProfile
+);
+
+// POST /api/auth/forgot-password
+router.post(
+  '/forgot-password',
+  authLimiter,
+  [body('email').isEmail().normalizeEmail().withMessage('Valid email is required')],
+  validate,
+  forgotPassword
+);
+
+// POST /api/auth/reset-password/:token
+router.post(
+  '/reset-password/:token',
+  authLimiter,
+  [
+    body('password')
+      .isLength({ min: 8 })
+      .withMessage('Password must be at least 8 characters'),
+  ],
+  validate,
+  resetPassword
 );
 
 module.exports = router;
