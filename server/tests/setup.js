@@ -4,7 +4,9 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 let mongoServer;
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryServer.create({
+    instance: { launchTimeout: 60000 },
+  });
   const uri = mongoServer.getUri();
 
   process.env.JWT_SECRET = 'test-jwt-secret';

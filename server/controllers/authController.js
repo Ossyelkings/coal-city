@@ -188,17 +188,21 @@ exports.forgotPassword = async (req, res, next) => {
       const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
       const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
-      await sendEmail({
-        to: user.email,
-        subject: 'Password Reset Request',
-        html: `
-          <h2>Password Reset</h2>
-          <p>You requested a password reset. Click the link below to set a new password:</p>
-          <p><a href="${resetUrl}">${resetUrl}</a></p>
-          <p>This link expires in 1 hour.</p>
-          <p>If you did not request this, please ignore this email.</p>
-        `,
-      });
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: 'Password Reset Request',
+          html: `
+            <h2>Password Reset</h2>
+            <p>You requested a password reset. Click the link below to set a new password:</p>
+            <p><a href="${resetUrl}">${resetUrl}</a></p>
+            <p>This link expires in 1 hour.</p>
+            <p>If you did not request this, please ignore this email.</p>
+          `,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send password reset email:', emailErr.message);
+      }
     }
 
     // Always return success to avoid revealing whether the email exists

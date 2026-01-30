@@ -1,7 +1,11 @@
 require('./setup');
+const crypto = require('crypto');
 const request = require('supertest');
 const app = require('../app');
 const User = require('../models/User');
+const sendEmail = require('../utils/sendEmail');
+
+jest.mock('../utils/sendEmail', () => jest.fn().mockResolvedValue(undefined));
 
 describe('Auth Endpoints', () => {
   const testUser = {
@@ -168,6 +172,117 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/refresh')
         .send({ refreshToken: regRes.body.refreshToken })
         .expect(401);
+    });
+  });
+
+  describe('POST /api/auth/forgot-password', () => {
+    beforeEach(async () => {
+      sendEmail.mockClear();
+      await User.create(testUser);
+    });
+
+    it('should return success and send email for existing user', async () => {
+      const res = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email: testUser.email })
+        .expect(200);
+
+      expect(res.body.message).toMatch(/reset link/i);
+      expect(sendEmail).toHaveBeenCalledTimes(1);
+      expect(sendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: testUser.email,
+          subject: expect.stringContaining('Password Reset'),
+        })
+      );
+
+      // Verify token was stored on user
+      const user = await User.findOne({ email: testUser.email });
+      expect(user.passwordResetToken).toBeDefined();
+      expect(user.passwordResetExpires).toBeDefined();
+      expect(new Date(user.passwordResetExpires).getTime()).toBeGreaterThan(Date.now());
+    });
+
+    it('should return success for non-existent email (no leak)', async () => {
+      const res = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email: 'nobody@example.com' })
+        .expect(200);
+
+      expect(res.body.message).toMatch(/reset link/i);
+      expect(sendEmail).not.toHaveBeenCalled();
+    });
+
+    it('should reject invalid email format', async () => {
+      await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email: 'not-an-email' })
+        .expect(422);
+    });
+  });
+
+  describe('POST /api/auth/reset-password/:token', () => {
+    let rawToken;
+
+    beforeEach(async () => {
+      const user = await User.create(testUser);
+
+      rawToken = crypto.randomBytes(32).toString('hex');
+      user.passwordResetToken = crypto
+        .createHash('sha256')
+        .update(rawToken)
+        .digest('hex');
+      user.passwordResetExpires = Date.now() + 60 * 60 * 1000;
+      await user.save();
+    });
+
+    it('should reset password with valid token', async () => {
+      const newPassword = 'newpassword123';
+      const res = await request(app)
+        .post(`/api/auth/reset-password/${rawToken}`)
+        .send({ password: newPassword })
+        .expect(200);
+
+      expect(res.body.message).toMatch(/reset successfully/i);
+
+      // Verify reset fields are cleared
+      const user = await User.findOne({ email: testUser.email });
+      expect(user.passwordResetToken).toBeUndefined();
+      expect(user.passwordResetExpires).toBeUndefined();
+
+      // Verify new password works for login
+      const loginRes = await request(app)
+        .post('/api/auth/login')
+        .send({ email: testUser.email, password: newPassword })
+        .expect(200);
+
+      expect(loginRes.body.accessToken).toBeDefined();
+    });
+
+    it('should reject invalid token', async () => {
+      await request(app)
+        .post('/api/auth/reset-password/invalidtoken')
+        .send({ password: 'newpassword123' })
+        .expect(400);
+    });
+
+    it('should reject expired token', async () => {
+      // Set token expiry to the past
+      const user = await User.findOne({ email: testUser.email });
+      user.passwordResetExpires = Date.now() - 1000;
+      await user.save();
+
+      await request(app)
+        .post(`/api/auth/reset-password/${rawToken}`)
+        .send({ password: 'newpassword123' })
+        .expect(400);
+    });
+
+    it('should reject password shorter than 8 characters', async () => {
+      await request(app)
+        .post(`/api/auth/reset-password/${rawToken}`)
+        .send({ password: 'short' })
+        .expect(422);
     });
   });
 });
