@@ -9,7 +9,18 @@ const { generalLimiter } = require('./middleware/rateLimiter');
 const app = express();
 
 // Global middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https://images.unsplash.com"],
+      connectSrc: ["'self'"],
+    },
+  },
+}));
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: false }));
@@ -38,14 +49,12 @@ app.use('/api/team', require('./routes/team'));
 app.use('/api/company', require('./routes/company'));
 app.use('/api/upload', require('./routes/upload'));
 
-// Serve React frontend in production
-if (process.env.NODE_ENV === 'production') {
-  const clientBuild = path.join(__dirname, '..', 'build');
-  app.use(express.static(clientBuild));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(clientBuild, 'index.html'));
-  });
-}
+// Serve React frontend (built app)
+const clientBuild = path.join(__dirname, '..', 'build');
+app.use(express.static(clientBuild));
+app.get('{*path}', (req, res) => {
+  res.sendFile(path.join(clientBuild, 'index.html'));
+});
 
 // Global error handler
 app.use(errorHandler);
