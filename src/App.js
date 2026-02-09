@@ -16,6 +16,7 @@ import CategoryForm from './pages/admin/CategoryForm';
 import Quotes from './pages/admin/Quotes';
 import Contacts from './pages/admin/Contacts';
 import Team from './pages/admin/Team';
+import Users from './pages/admin/Users';
 import Settings from './pages/admin/Settings';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -68,6 +69,7 @@ export default function App() {
           <Route path="quotes" element={<Quotes />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="team" element={<Team />} />
+          <Route path="users" element={<Users />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 

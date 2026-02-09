@@ -48,6 +48,7 @@ app.use('/api/contacts', require('./routes/contacts'));
 app.use('/api/team', require('./routes/team'));
 app.use('/api/company', require('./routes/company'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/users', require('./routes/users'));
 
 // Serve React frontend (built app)
 const clientBuild = path.join(__dirname, '..', 'build');

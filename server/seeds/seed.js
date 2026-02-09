@@ -135,15 +135,28 @@ async function seed() {
       CompanyInfo.deleteMany({}),
     ]);
 
-    // 1. Create admin user
-    console.log('Creating admin user...');
-    await User.create({
-      name: 'Admin',
-      email: 'admin@coalcityplumbing.com',
-      password: 'admin1234',
-      role: 'admin',
-    });
-    console.log('  Admin created (email: admin@coalcityplumbing.com, password: admin1234)');
+    // 1. Create users
+    console.log('Creating users...');
+    const usersData = [
+      { name: 'Admin', email: 'admin@coalcityplumbing.com', password: 'admin1234', role: 'admin', phone: '+234 801 000 0001' },
+      { name: 'Chinedu Okafor', email: 'chinedu@gmail.com', password: 'password123', role: 'customer', phone: '+234 802 345 6789' },
+      { name: 'Amara Eze', email: 'amara.eze@yahoo.com', password: 'password123', role: 'customer', phone: '+234 803 456 7890' },
+      { name: 'Obinna Nwachukwu', email: 'obinna.n@hotmail.com', password: 'password123', role: 'customer', phone: '+234 804 567 8901' },
+      { name: 'Ugochi Obi', email: 'ugochi.obi@gmail.com', password: 'password123', role: 'customer', phone: '+234 805 678 9012' },
+      { name: 'Emeka Udeh', email: 'emeka.udeh@outlook.com', password: 'password123', role: 'customer', phone: '+234 806 789 0123' },
+      { name: 'Chioma Anyanwu', email: 'chioma.a@gmail.com', password: 'password123', role: 'customer', phone: '+234 807 890 1234' },
+      { name: 'Kelechi Ogbu', email: 'kelechi.ogbu@yahoo.com', password: 'password123', role: 'customer', phone: '+234 808 901 2345' },
+      { name: 'Adaeze Nnaji', email: 'adaeze.nnaji@gmail.com', password: 'password123', role: 'admin', phone: '+234 809 012 3456' },
+      { name: 'Tochukwu Ibe', email: 'tochi.ibe@hotmail.com', password: 'password123', role: 'customer', phone: '+234 810 123 4567' },
+      { name: 'Nneka Okwu', email: 'nneka.okwu@gmail.com', password: 'password123', role: 'customer', phone: '+234 811 234 5678' },
+    ];
+
+    for (const userData of usersData) {
+      await User.create(userData);
+    }
+    console.log(`  ${usersData.length} users created`);
+    console.log('  Admin: admin@coalcityplumbing.com / admin1234');
+    console.log('  Test users: password123');
 
     // 2. Create categories
     console.log('Creating categories...');
